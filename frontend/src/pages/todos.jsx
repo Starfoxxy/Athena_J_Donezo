@@ -13,8 +13,19 @@ export default function Todos(){
   } else {
 	  // If the modal is not open, open it by calling the `showModal()` method.
   modalRef.current.showModal();
+  }
  }
-}
+
+  const { register, handleSubmit } = useForm({ 
+    defaultValues: { 
+      name: "", 
+      description: "" 
+    } 
+  });
+
+  const handleNewTodo = (values) => {
+    toggleNewTodoModal();
+  }
   
   function NewTodoButton () {
     return (
@@ -29,7 +40,7 @@ export default function Todos(){
       <dialog ref={modalRef} className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg">New Todo</h3>
-          <form>
+          <form onSubmit={handleSubmit(handleNewTodo)}>
             <label className="form-control w-full">
               <div className="label">
                 <span className="label-text">Name of Todo</span>
@@ -37,8 +48,7 @@ export default function Todos(){
               <input
                 type="text"
                 placeholder="Type here"
-                className="input input-bordered w-full"
-              />
+                className="input input-bordered w-full" {...register("name")} />
             </label>
             <label className="form-control w-full">
               <div className="label">
@@ -47,8 +57,7 @@ export default function Todos(){
               <input
                 type="text"
                 placeholder="Type here"
-                className="input input-bordered w-full"
-              />
+                className="input input-bordered w-full" {...register("description")} />
             </label>
             <div className="modal-action">
               <button type="submit" className="btn btn-primary">
