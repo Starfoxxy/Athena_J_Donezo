@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import MainLayout from "./layouts/main-layout";
 import ProtectedRoute from "./components/protected-route";
@@ -16,7 +16,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/todos" element={<MainLayout />}>
-            <Route path="/todos" element={<ProtectedRoute><Todos /></ProtectedRoute>} />
+            <Route index element={<ProtectedRoute><Todos /></ProtectedRoute>} />
           </Route>
         </Routes>
       </BrowserRouter>
