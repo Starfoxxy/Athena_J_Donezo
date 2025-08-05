@@ -4,6 +4,30 @@ import { useForm } from "react-hook-form";
 
 export default function Todos(){
   const modalRef = useRef();
+  const queryClient = useQueryClient();
+
+  const { register, handleSubmit } = useForm({ 
+    defaultValues: { 
+      name: "", 
+      description: "" 
+    } 
+  });
+
+  const { data, isError, isLoading } = useQuery({
+    // A unique key to identify this query in React Query's cache
+    queryKey: ["todos"],
+
+    // The function responsible for fetching the data
+    queryFn: async () => {
+      const axiosInstance = await getAxiosClient();
+
+      // Use the Axios instance to send a GET request to fetch the list of todos
+      const { data } = await axiosInstance.get("http://localhost:8080/todos");
+
+      // Return the fetched data (React Query will cache it under the queryKey)
+      return data;
+    },
+  });
 
   const { mutate: createNewTodo } = useMutation({
 	  // The key used to identify this mutation in React Query's cache
@@ -25,6 +49,34 @@ export default function Todos(){
 	  }
   });
 
+  const { mutate: markAsCompleted } = useMutation({
+    mutationKey: ["markAsCompleted"],
+    mutationFn: async (todoId) => {
+      const axiosInstance = await getAxiosClient(); 
+
+      const { data } = await axiosInstance.put(`http://localhost:8080/todos/${todoId}/completed`);
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries("todos");
+    }
+  });
+
+  if(isLoading){
+    return (
+      <div>Loading Todos...</div>
+    )
+  }
+  
+  if(isError){
+    return (
+      <div>There was an error</div>
+    )
+  }
+
+  console.log(data);
+
   const toggleNewTodoModal = () => {
     // Check if the modal is currently open by accessing the `open` property of `modalRef`.
   if (modalRef.current.open) {
@@ -32,16 +84,9 @@ export default function Todos(){
     modalRef.current.close();
   } else {
 	  // If the modal is not open, open it by calling the `showModal()` method.
-  modalRef.current.showModal();
+    modalRef.current.showModal();
   }
  }
-
-  const { register, handleSubmit } = useForm({ 
-    defaultValues: { 
-      name: "", 
-      description: "" 
-    } 
-  });
 
   const handleNewTodo = (values) => {
     createNewTodo(values);
@@ -66,31 +111,71 @@ export default function Todos(){
               <div className="label">
                 <span className="label-text">Name of Todo</span>
               </div>
-              <input
-                type="text"
-                placeholder="Type here"
-                className="input input-bordered w-full" {...register("name")} />
+              <input type="text" placeholder="Type here" className="input input-bordered w-full" {...register("name")} />
             </label>
             <label className="form-control w-full">
               <div className="label">
                 <span className="label-text">Description</span>
               </div>
-              <input
-                type="text"
-                placeholder="Type here"
-                className="input input-bordered w-full" {...register("description")} />
+              <input type="text" placeholder="Type here" className="input input-bordered w-full" {...register("description")} />
             </label>
             <div className="modal-action">
-              <button type="submit" className="btn btn-primary">
-                Create Todo
-              </button>
-              <button type="button" className="btn btn-ghost">
-                Close
-              </button>
+              <button type="submit" className="btn btn-primary">Create Todo</button>
+              <button type="button" className="btn btn-ghost">Close</button>
             </div>
           </form>
         </div>
       </dialog>
     );
   }
+
+  function TodoItemList({ todos }) {
+    if (!todos || todos.length === 0) {
+      return (
+        <div className="text-center text-sm text-gray-500">
+          No valid todo items to display.
+        </div>
+      );
+    }
+    
+    return (
+      <div className="w-lg h-sm flex column items-center justify-center gap-4">
+          <ul className="flex column items-center justify-center gap-4">
+            {todos.map(todo => (
+                <li key={todo.id} className="inline-flex items-center gap-4">
+                  <div className="w-md">
+                    <h3 className="text-lg">
+                      {todo.name}
+                    </h3>
+                    <p className="text-sm">{todo.description}</p>
+                  </div>
+                  <div className="w-md">
+                    <label className="swap">
+                      <input type="checkbox" onClick={() => markAsCompleted(todo.id)} />
+                      <div className="swap-on">Yes</div>
+                      <div className="swap-off">No</div>
+                    </label>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
+    );
+  }
+
+  return (
+    <div>
+      <NewTodoButton />
+
+      {data.success && data.todos && data.todos.length > 0 ? (
+        <TodoItemList todos={data.todos} />
+      ) : (
+        <div className="text-center text-sm text-gray-500 mt-4">
+          No todos to display yet. Create one!
+        </div>
+      )}
+     
+      <TodoModal />
+    </div>
+  );
 }
