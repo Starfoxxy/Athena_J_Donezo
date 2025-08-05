@@ -121,7 +121,7 @@ export default function Todos(){
             </label>
             <div className="modal-action">
               <button type="submit" className="btn btn-primary">Create Todo</button>
-              <button type="button" className="btn btn-ghost">Close</button>
+              <button type="button" className="btn btn-ghost" onClick={toggleNewTodoModal}>Close</button>
             </div>
           </form>
         </div>
